@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search, MoreVertical, Mail, Shield, User, Loader2, UserPlus } from 'lucide-react';
+import { Search, MoreVertical, Mail, Shield, User, Loader2, UserPlus, Trash2 } from 'lucide-react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { PageHeader } from '@/components/PageHeader';
-import { useProfiles, useSetUserRole } from '@/hooks/useProfiles';
+import { useProfiles, useSetUserRole, useDeleteUser } from '@/hooks/useProfiles';
 import { useComponents } from '@/hooks/useComponents';
 import { InviteAdminDialog } from '@/components/InviteAdminDialog';
 import { Button } from '@/components/ui/button';
@@ -22,7 +22,18 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { UserProfileDialog } from '@/components/UserProfileDialog';
 import { ProfileWithRole } from '@/hooks/useProfiles';
 
@@ -30,10 +41,12 @@ export default function Users() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<ProfileWithRole | null>(null);
+  const [userToDelete, setUserToDelete] = useState<ProfileWithRole | null>(null);
   const [isViewProfileOpen, setIsViewProfileOpen] = useState(false);
   const { data: profiles, isLoading: isLoadingProfiles } = useProfiles();
   const { data: components } = useComponents();
   const setUserRole = useSetUserRole();
+  const deleteUser = useDeleteUser();
 
   const filteredUsers = profiles?.filter(profile =>
     profile.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -48,6 +61,17 @@ export default function Users() {
 
   const handleSetRole = async (userId: string, role: 'admin' | 'member') => {
     await setUserRole.mutateAsync({ userId, role });
+  };
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+
+    try {
+      await deleteUser.mutateAsync(userToDelete.id);
+      setUserToDelete(null);
+    } catch (error) {
+      // Error handled by mutation
+    }
   };
 
   if (isLoadingProfiles) {
@@ -174,6 +198,14 @@ export default function Users() {
                             Demote to Member
                           </DropdownMenuItem>
                         )}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          onClick={() => setUserToDelete(profile)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete User
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -188,6 +220,42 @@ export default function Users() {
         open={isInviteDialogOpen}
         onOpenChange={setIsInviteDialogOpen}
       />
+
+      <UserProfileDialog
+        user={selectedUser}
+        open={isViewProfileOpen}
+        onOpenChange={setIsViewProfileOpen}
+        componentName={selectedUser ? getComponentName(selectedUser.component_id) : null}
+      />
+
+      <AlertDialog open={!!userToDelete} onOpenChange={() => setUserToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the user account for <span className="font-medium text-foreground">{userToDelete?.full_name}</span>.
+              They will no longer be able to sign in or access any data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteUser}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteUser.isPending}
+            >
+              {deleteUser.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete User'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <UserProfileDialog
         user={selectedUser}
