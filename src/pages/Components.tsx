@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Search, Mail, Phone, Users, MoreVertical, Plus, Copy, Link, Loader2 } from 'lucide-react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { PageHeader } from '@/components/PageHeader';
-import { useComponents, useCreateComponent, useUpdateComponent, Component } from '@/hooks/useComponents';
+import { useComponents, useCreateComponent, useUpdateComponent, useDeleteComponent, Component } from '@/hooks/useComponents';
 import { ComponentSubmissionsDialog } from '@/components/ComponentSubmissionsDialog';
 import { ComponentMembersDialog } from '@/components/ComponentMembersDialog';
 import { useProfiles } from '@/hooks/useProfiles';
@@ -47,12 +47,14 @@ export default function Components() {
   // Form states
   const [newComponent, setNewComponent] = useState({ name: '', email: '', phone: '' });
   const [editForm, setEditForm] = useState({ name: '', email: '', phone: '' });
+  const [deletingComponent, setDeletingComponent] = useState<Component | null>(null);
 
   const { data: components, isLoading } = useComponents();
 
   const { data: profiles } = useProfiles();
   const createComponent = useCreateComponent();
   const updateComponent = useUpdateComponent();
+  const deleteComponent = useDeleteComponent();
   const { toast } = useToast();
 
   const filteredComponents = components?.filter(component =>
@@ -107,6 +109,17 @@ export default function Components() {
       phone: component.phone || '',
     });
     setIsEditDialogOpen(true);
+  };
+
+  const handleDeleteComponent = async () => {
+    if (!deletingComponent) return;
+
+    try {
+      await deleteComponent.mutateAsync(deletingComponent.id);
+      setDeletingComponent(null);
+    } catch (error) {
+      // Error handled by mutation
+    }
   };
 
 
@@ -258,6 +271,12 @@ export default function Components() {
                   <DropdownMenuItem onClick={() => openEditDialog(component)}>
                     Edit Component
                   </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive"
+                    onClick={() => setDeletingComponent(component)}
+                  >
+                    Delete Component
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -362,6 +381,12 @@ export default function Components() {
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => openEditDialog(component)}>
                         Edit Component
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="text-destructive focus:text-destructive"
+                        onClick={() => setDeletingComponent(component)}
+                      >
+                        Delete Component
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -471,6 +496,39 @@ export default function Components() {
         componentId={viewingMembersComponent?.id || null}
         componentName={viewingMembersComponent?.name || ''}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={!!deletingComponent} onOpenChange={() => setDeletingComponent(null)}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Delete Component</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete <span className="font-medium text-foreground">{deletingComponent?.name}</span>?
+              This action cannot be undone and will delete all associated data including submissions.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col sm:flex-row gap-2 mt-4">
+            <Button variant="outline" onClick={() => setDeletingComponent(null)} className="w-full sm:w-auto">
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteComponent}
+              disabled={deleteComponent.isPending}
+              className="w-full sm:w-auto"
+            >
+              {deleteComponent.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete Component'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }

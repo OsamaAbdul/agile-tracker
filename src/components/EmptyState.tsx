@@ -1,12 +1,12 @@
 import { ReactNode } from 'react';
 import { motion } from 'framer-motion';
-import { FileText, Inbox } from 'lucide-react';
+import { FileText, Inbox, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface EmptyStateProps {
   title: string;
   description?: string;
-  icon?: 'document' | 'inbox';
+  icon?: 'document' | 'inbox' | 'users';
   action?: ReactNode;
   className?: string;
 }
@@ -14,6 +14,7 @@ interface EmptyStateProps {
 const icons = {
   document: FileText,
   inbox: Inbox,
+  users: Users,
 };
 
 export function EmptyState({ title, description, icon = 'inbox', action, className }: EmptyStateProps) {

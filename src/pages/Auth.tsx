@@ -7,12 +7,12 @@ import { useComponents } from '@/hooks/useComponents';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import agileLogo from '@/assets/agile-logo.jpg';
@@ -43,7 +43,7 @@ export default function Auth() {
   const [componentId, setComponentId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  
+
   const { login, signUp, isAuthenticated } = useAuth();
   const { data: components, isLoading: isLoadingComponents } = useComponents();
   const navigate = useNavigate();
@@ -58,7 +58,7 @@ export default function Auth() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
-    
+
     const result = loginSchema.safeParse({ email, password });
     if (!result.success) {
       const fieldErrors: Record<string, string> = {};
@@ -72,10 +72,10 @@ export default function Auth() {
     }
 
     setIsLoading(true);
-    
+
     try {
       const { error } = await login(email, password);
-      
+
       if (error) {
         if (error.message.includes('Invalid login credentials')) {
           toast({
@@ -111,7 +111,7 @@ export default function Auth() {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
-    
+
     const result = signUpSchema.safeParse({ fullName, email, password, confirmPassword, componentId });
     if (!result.success) {
       const fieldErrors: Record<string, string> = {};
@@ -136,10 +136,10 @@ export default function Auth() {
     }
 
     setIsLoading(true);
-    
+
     try {
       const { error } = await signUp(email, password, fullName, selectedComponent.registration_token || undefined);
-      
+
       if (error) {
         if (error.message.includes('User already registered')) {
           toast({
@@ -178,7 +178,7 @@ export default function Auth() {
       <div className="hidden lg:flex lg:w-1/2 xl:w-[55%] relative overflow-hidden">
         <div className="absolute inset-0 gradient-primary" />
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0djItSDI0di0yaDEyek0zNiAzMHYtMkgyNHYyaDEyek0yNCAyNmgydi0yaC0ydjJ6Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-50" />
-        
+
         <div className="relative z-10 flex flex-col justify-center px-12 xl:px-20 text-primary-foreground">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -199,19 +199,19 @@ export default function Auth() {
                 <p className="text-xs opacity-60">Nigeria</p>
               </div>
             </div>
-            
+
             <h1 className="text-3xl xl:text-4xl font-bold mb-4 leading-tight text-balance">
               Adolescent Girls Initiative for Learning and Empowerment
             </h1>
             <p className="text-lg opacity-90 max-w-lg leading-relaxed">
               Monthly Activity Tracking System for AGILE Components. Track, report, and monitor project activities seamlessly.
             </p>
-            
+
             <div className="mt-12 flex items-center gap-3">
               <div className="flex -space-x-2">
                 {[1, 2, 3, 4].map((i) => (
-                  <div 
-                    key={i} 
+                  <div
+                    key={i}
                     className="h-10 w-10 rounded-full bg-white/20 border-2 border-white/30 flex items-center justify-center text-xs font-medium"
                   >
                     {String.fromCharCode(64 + i)}
@@ -224,7 +224,7 @@ export default function Auth() {
             </div>
           </motion.div>
         </div>
-        
+
         {/* Decorative elements */}
         <div className="absolute bottom-0 right-0 w-80 h-80 bg-white/5 rounded-full -mr-40 -mb-40" />
         <div className="absolute top-20 right-20 w-40 h-40 bg-white/5 rounded-full" />
@@ -259,7 +259,7 @@ export default function Auth() {
                 {isLogin ? 'Welcome back' : 'Create account'}
               </h2>
               <p className="text-sm text-muted-foreground mt-2">
-                {isLogin 
+                {isLogin
                   ? 'Enter your credentials to continue'
                   : 'Register to start submitting reports'
                 }
@@ -275,7 +275,7 @@ export default function Auth() {
                     <Input
                       id="email"
                       type="email"
-                      placeholder="you@example.com"
+                      placeholder="osamaabdul@example.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       disabled={isLoading}
@@ -333,7 +333,7 @@ export default function Auth() {
                     <Input
                       id="fullName"
                       type="text"
-                      placeholder="John Adebayo"
+                      placeholder="Osama Abdullahi"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       disabled={isLoading}
@@ -450,8 +450,8 @@ export default function Auth() {
                 className="text-sm text-primary hover:text-primary/80 font-medium transition-colors"
                 disabled={isLoading}
               >
-                {isLogin 
-                  ? "Don't have an account? Sign up" 
+                {isLogin
+                  ? "Don't have an account? Sign up"
                   : 'Already have an account? Sign in'
                 }
               </button>

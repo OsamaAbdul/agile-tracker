@@ -43,7 +43,7 @@ export function useSystemMessages() {
         queryKey: ['system_messages'],
         queryFn: async () => {
             const { data, error } = await supabase
-                .from('system_messages')
+                .from('system_messages' as any)
                 .select(`
           *,
           user:profiles(email, full_name)
@@ -52,7 +52,7 @@ export function useSystemMessages() {
 
             if (error) throw error;
             // Map the nested profile data to a simpler structure if needed, or stick with joined response
-            return data.map(msg => ({
+            return (data as any[])?.map(msg => ({
                 ...msg,
                 user: msg.user
             })) as unknown as SystemMessage[];
@@ -71,7 +71,7 @@ export function useSendSystemMessage() {
             if (!user) throw new Error('Not authenticated');
 
             const { error } = await supabase
-                .from('system_messages')
+                .from('system_messages' as any)
                 .insert([{
                     user_id: user.id,
                     subject,
@@ -102,7 +102,7 @@ export function useMarkSystemMessageRead() {
     return useMutation({
         mutationFn: async (id: string) => {
             const { error } = await supabase
-                .from('system_messages')
+                .from('system_messages' as any)
                 .update({ is_read: true })
                 .eq('id', id);
 
