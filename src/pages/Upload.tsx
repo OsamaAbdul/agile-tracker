@@ -5,8 +5,9 @@ import { DashboardLayout } from '@/components/DashboardLayout';
 import { PageHeader } from '@/components/PageHeader';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCreateSubmission } from '@/hooks/useSubmissions';
-import { MONTHS, getSubmissionDeadline } from '@/types';
+import { MONTHS, getSubmissionDeadline, isSubmissionWindowOpen } from '@/types';
 import { Button } from '@/components/ui/button';
+import { useSettings } from '@/hooks/useSettings';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -26,6 +27,7 @@ export default function Upload() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const createSubmission = useCreateSubmission();
+  const { isSubmissionsOpenOverride, isLoadingClientSettings } = useSettings();
   const [componentName, setComponentName] = useState<string | null>(null);
 
   const currentYear = new Date().getFullYear();
@@ -123,6 +125,33 @@ export default function Upload() {
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   };
 
+  const isWindowOpen = isSubmissionWindowOpen(isSubmissionsOpenOverride);
+
+  if (!isWindowOpen) {
+    return (
+      <DashboardLayout>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+          <div className="h-20 w-20 rounded-3xl bg-orange-500/10 flex items-center justify-center mb-6">
+            <Clock className="h-10 w-10 text-orange-500" />
+          </div>
+          <h2 className="text-2xl font-bold text-foreground mb-3">Submissions are Closed</h2>
+          <p className="text-muted-foreground max-w-md text-base mb-8">
+            Monthly activity reports can only be submitted between the **25th of the month** and the **5th of the following month**.
+          </p>
+          <div className="p-6 rounded-2xl bg-muted/50 border border-border max-w-sm w-full">
+            <h3 className="font-semibold mb-2">Next Window</h3>
+            <p className="text-sm text-muted-foreground">
+              Wait until the 25th of this month to upload your report.
+            </p>
+          </div>
+          <Button variant="outline" className="mt-8" onClick={() => navigate('/dashboard')}>
+            Return to Dashboard
+          </Button>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   if (!profile?.component_id) {
     return (
       <DashboardLayout>
@@ -176,8 +205,8 @@ export default function Upload() {
           </div>
 
           <div className={`mt-4 p-4 rounded-xl flex items-start gap-3 ${isLate
-              ? 'bg-orange-500/10 border border-orange-500/20'
-              : 'bg-primary/10 border border-primary/20'
+            ? 'bg-orange-500/10 border border-orange-500/20'
+            : 'bg-primary/10 border border-primary/20'
             }`}>
             {isLate ? (
               <AlertCircle className="h-5 w-5 text-orange-500 shrink-0 mt-0.5" />

@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
-import { 
-  Building2, 
-  FileText, 
+import {
+  Building2,
+  FileText,
   AlertTriangle,
   CheckCircle2,
   Clock,
@@ -19,8 +20,12 @@ import { SubmissionReviewCard } from '@/components/SubmissionReviewCard';
 import { useAuth } from '@/contexts/AuthContext';
 import { useComponents } from '@/hooks/useComponents';
 import { useSubmissions, useComponentSubmissions } from '@/hooks/useSubmissions';
-import { MONTHS, getSubmissionStatus } from '@/types';
+import { MONTHS, getSubmissionStatus, isSubmissionWindowOpen } from '@/types';
 import { Button } from '@/components/ui/button';
+import { useSettings } from '@/hooks/useSettings';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -38,7 +43,7 @@ function AdminDashboard() {
   const { data: submissions, isLoading: isLoadingSubmissions } = useSubmissions({
     year: currentYear
   });
-  
+
   const navigate = useNavigate();
 
   if (isLoadingComponents || isLoadingSubmissions) {
@@ -62,8 +67,8 @@ function AdminDashboard() {
 
   return (
     <DashboardLayout>
-      <PageHeader 
-        title="Dashboard" 
+      <PageHeader
+        title="Dashboard"
         description={`Activity overview for ${MONTHS[currentMonth - 1]} ${currentYear}`}
       />
 
@@ -112,7 +117,7 @@ function AdminDashboard() {
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
-        
+
         {recentSubmissions.length > 0 ? (
           <div className="overflow-x-auto">
             <Table>
@@ -129,7 +134,7 @@ function AdminDashboard() {
                 {recentSubmissions.map((submission) => {
                   const component = components?.find(c => c.id === submission.component_id);
                   const status = getSubmissionStatus(submission as any, submission.month, submission.year);
-                  
+
                   return (
                     <TableRow key={submission.id}>
                       <TableCell>
@@ -187,11 +192,53 @@ function AdminDashboard() {
   );
 }
 
+function AdminSubmissionControl() {
+  const { isSubmissionsOpenOverride, updateSetting, isLoading } = useSettings();
+
+  return (
+    <Card className="mb-8 border-primary/20 bg-primary/5">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg flex items-center gap-2">
+          <Clock className="h-5 w-5 text-primary" />
+          Global Submission Control
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-center justify-between gap-4">
+          <div className="space-y-1">
+            <Label htmlFor="submission-toggle" className="text-base">Open Submissions Manually</Label>
+            <p className="text-sm text-muted-foreground">
+              When enabled, members can submit reports regardless of the monthly window (25th - 5th).
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className={cn(
+              "text-sm font-medium",
+              isSubmissionsOpenOverride ? "text-primary" : "text-muted-foreground"
+            )}>
+              {isSubmissionsOpenOverride ? 'Open' : 'Closed'}
+            </span>
+            <Switch
+              id="submission-toggle"
+              checked={isSubmissionsOpenOverride}
+              onCheckedChange={(checked) => updateSetting.mutate({ key: 'submissions_open', value: String(checked) })}
+              disabled={isLoading || updateSetting.isPending}
+            />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function MemberDashboard() {
   const { profile, getComponentName } = useAuth();
   const [componentName, setComponentName] = useState<string | null>(null);
   const { data: submissions, isLoading } = useComponentSubmissions(profile?.component_id || undefined);
+  const { isSubmissionsOpenOverride } = useSettings();
   const navigate = useNavigate();
+
+  const isWindowOpen = isSubmissionWindowOpen(isSubmissionsOpenOverride);
 
   useEffect(() => {
     getComponentName().then(setComponentName);
@@ -210,13 +257,13 @@ function MemberDashboard() {
   const submittedCount = submissions?.length || 0;
   const pendingMonths = 12 - submittedCount;
   const scoredSubmissions = submissions?.filter(s => s.score !== null) || [];
-  const averageScore = scoredSubmissions.length > 0 
-    ? scoredSubmissions.reduce((acc, s) => acc + (s.score || 0), 0) / scoredSubmissions.length 
+  const averageScore = scoredSubmissions.length > 0
+    ? scoredSubmissions.reduce((acc, s) => acc + (s.score || 0), 0) / scoredSubmissions.length
     : 0;
 
   return (
     <DashboardLayout>
-      <PageHeader 
+      <PageHeader
         title="Welcome back"
         description={componentName || 'Your component dashboard'}
       />
@@ -255,11 +302,13 @@ function MemberDashboard() {
             <h2 className="text-lg font-semibold text-foreground">Your Submissions</h2>
             <p className="text-sm text-muted-foreground">History and review status</p>
           </div>
-          <Button size="sm" onClick={() => navigate('/upload')} className="w-full sm:w-auto">
-            Submit New Report
-          </Button>
+          {isWindowOpen && (
+            <Button size="sm" onClick={() => navigate('/upload')} className="w-full sm:w-auto">
+              Submit New Report
+            </Button>
+          )}
         </div>
-        
+
         {submissions && submissions.length > 0 ? (
           <div className="p-4 space-y-3">
             {submissions.map((submission) => (
@@ -273,9 +322,11 @@ function MemberDashboard() {
             </div>
             <h3 className="text-lg font-semibold text-foreground mb-1">No submissions yet</h3>
             <p className="text-sm text-muted-foreground max-w-sm mx-auto mb-4">
-              Submit your first monthly activity report
+              {isWindowOpen
+                ? "Submit your first monthly activity report"
+                : "Submissions are currently closed. You can submit reports from the 25th of the month to the 5th of the following month."}
             </p>
-            <Button onClick={() => navigate('/upload')}>Submit Report</Button>
+            {isWindowOpen && <Button onClick={() => navigate('/upload')}>Submit Report</Button>}
           </div>
         )}
       </motion.div>
@@ -285,6 +336,6 @@ function MemberDashboard() {
 
 export default function Dashboard() {
   const { isAdmin } = useAuth();
-  
+
   return isAdmin ? <AdminDashboard /> : <MemberDashboard />;
 }

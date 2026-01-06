@@ -66,10 +66,23 @@ export function getSubmissionStatus(
 ): SubmissionStatus {
   const now = new Date();
   const deadline = getSubmissionDeadline(month, year);
-  
+
   if (!submission) {
     return now > deadline ? 'missing' : 'pending';
   }
-  
+
   return submission.is_late ? 'late' : 'submitted';
+}
+
+export function isSubmissionWindowOpen(overrideOpen: boolean = false): boolean {
+  if (overrideOpen) return true;
+
+  const now = new Date();
+  const day = now.getDate();
+  const month = now.getMonth(); // 0-11
+
+  // Logic: 25th of month X to 5th of month X+1
+  // If today is 25th or later, it's open for the current month's report (or previous month's depending on how you look at it)
+  // If today is 5th or earlier, it's open for the previous month's report
+  return day >= 25 || day <= 5;
 }

@@ -54,6 +54,9 @@ function NavItem({ to, icon: Icon, label, end = false, onClick }: NavItemProps) 
   );
 }
 
+import { useSettings } from '@/hooks/useSettings';
+import { isSubmissionWindowOpen } from '@/types';
+
 interface AppSidebarProps {
   isOpen: boolean;
   onToggle: () => void;
@@ -69,6 +72,9 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
     getComponentName().then(setComponentName);
   }, [getComponentName]);
 
+  const { isSubmissionsOpenOverride } = useSettings();
+  const isWindowOpen = isSubmissionWindowOpen(isSubmissionsOpenOverride);
+
   const adminNavItems = [
     { to: '/dashboard', icon: LayoutDashboard, label: 'Overview', end: true },
     { to: '/components', icon: Building2, label: 'Components' },
@@ -79,7 +85,7 @@ export function AppSidebar({ isOpen, onToggle }: AppSidebarProps) {
 
   const memberNavItems = [
     { to: '/dashboard', icon: LayoutDashboard, label: 'Overview', end: true },
-    { to: '/upload', icon: Upload, label: 'Submit Report' },
+    ...(isWindowOpen ? [{ to: '/upload', icon: Upload, label: 'Submit Report' }] : []),
   ];
 
   const navItems = isAdmin ? adminNavItems : memberNavItems;
