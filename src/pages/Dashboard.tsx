@@ -208,7 +208,7 @@ function AdminSubmissionControl() {
           <div className="space-y-1">
             <Label htmlFor="submission-toggle" className="text-base">Open Submissions Manually</Label>
             <p className="text-sm text-muted-foreground">
-              When enabled, members can submit reports regardless of the monthly window (25th - 5th).
+              When enabled, members can submit reports regardless of the monthly window (25th - 1st).
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -321,10 +321,10 @@ function MemberDashboard() {
               <FileText className="h-8 w-8 text-muted-foreground" />
             </div>
             <h3 className="text-lg font-semibold text-foreground mb-1">No submissions yet</h3>
-            <p className="text-sm text-muted-foreground max-w-sm mx-auto mb-4">
+            <p className="text-sm text-red-500 max-w-sm mx-auto mb-4">
               {isWindowOpen
                 ? "Submit your first monthly activity report"
-                : "Submissions are currently closed. You can submit reports from the 25th of the month to the 5th of the following month."}
+                : "Submissions are currently closed. You can submit reports from the 25th of the month to the 1st of the following month. All submissions are considered late submissions after that."}
             </p>
             {isWindowOpen && <Button onClick={() => navigate('/upload')}>Submit Report</Button>}
           </div>
